@@ -1,9 +1,22 @@
+/*#####################################################################################################################################################
+ File Name     : blynk.ino
+ Module        : control LED ON / OFF From dashboard
+ Description   : public function to control LED From Blynk platform
+ Created on    : Sep 1, 2025
+ Version       : V00
+ Author        : Moaaz_Zaki
+#####################################################################################################################################################*/
 #include "hardware.h"
+
 #include "config.h"
 
+/*##################################
+# Libraries for The Blynk Platform #
+##################################*/
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 
+//Prototype
 BLYNK_WRITE(V0);
 BLYNK_WRITE(V1);
 BLYNK_WRITE(V2);
@@ -26,20 +39,36 @@ int red_state = 0;
 int yellow_state = 0;
 int green_state = 0;
 
-void reset_switch() {
-  for (int i = 0; i < NUMBER_OF_LED; i++) {
-    Blynk.virtualWrite(switch_state[i], LOW);
-  }
-}
+/*=============================================================================================
+ Function Name: setup blynk
+ Description  : setup Blynk platform via Acess Token, Wifi SSID and Wifi Passward
+ Input        : Void
+=============================================================================================*/
+
 void setup_blynk(void) {
   Blynk.begin(acess_token, ssid, password);
 }
+
+/*=======================================================================================================================
+ Function Name: blynk connection
+ Description  : Maintain Connection, Process Incoming Data and Handle Outgoing Data
+ Input        : Void
+ Note         : It must be called on every cycle to ensure that the device remains online and responsive to commands. 
+========================================================================================================================*/
 
 void blynk_connection(void) {
   Blynk.run();
 }
 
-void check_blynk_connection() {
+/*========================================================================================================
+ Function Name: check_blynk_connection
+ Description  : check connection with platform.
+                  -if connection failed => try setup again
+                  -if connected => Maintain Connection, Process Incoming Data and Handle Outgoing Data
+ Input        : Void
+=========================================================================================================*/
+
+void check_blynk_connection( void ) {
   if (!Blynk.connected()) {
     while (!Blynk.connected()) {
       setup_blynk();
@@ -50,6 +79,31 @@ void check_blynk_connection() {
   }
 }
 
+/*=============================================================================================
+ Function Name: reset switch
+ Description  : turn off all switch on dashboard
+ Input        : Void
+=============================================================================================*/
+
+void reset_switch( void ) {
+  for (int i = 0; i < NUMBER_OF_LED; i++) {
+    Blynk.virtualWrite(switch_state[i], LOW);
+  }
+}
+
+/*=============================================================================================
+ Function Name: BLYNK WRITE
+ Description  : read switch state from dachboard
+ Input        : Virtual pin Number
+ Output       : read switch state if reading true
+                -Saves the remaining time to last state before turn off
+                -turn off all led
+                -turn off all switch
+                -turn on switch which change state from dashboard
+
+                if reading false
+                  -turn off switch which change state from dashboard
+=============================================================================================*/
 
 BLYNK_WRITE(V0) {
   red_state = param.asInt();
